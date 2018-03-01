@@ -1,6 +1,6 @@
 {
   "name": "@intervolga/html-index-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "WebPack 2+ plugin for creating index of output path",
   "main": "index.js",
   "scripts": {
