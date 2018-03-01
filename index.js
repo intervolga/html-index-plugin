@@ -23,38 +23,39 @@ HtmlIndexPlugin.prototype.apply = function(compiler) {
   const template = this.template;
   const title = this.options.title;
 
-  compiler.plugin('emit', function(compilation, callback) {
-    const body = Object.keys(compilation.assets).filter((asset)=> {
-      return /\.html$/i.test(asset) && 'index.html' !== asset;
-    }).map((asset) => {
-      const content = compilation.assets[asset].source();
-      const match = /<title>(.+?)<\/title>/g.exec(content);
-      const title = match && match.length > 0 ?
-        `${match[1]} (${asset})` : asset;
+  compiler.hooks.emit.tapAsync('HtmlIndexPlugin',
+    function(compilation, callback) {
+      const body = Object.keys(compilation.assets).filter((asset)=> {
+        return /\.html$/i.test(asset) && 'index.html' !== asset;
+      }).map((asset) => {
+        const content = compilation.assets[asset].source();
+        const match = /<title>(.+?)<\/title>/g.exec(content);
+        const title = match && match.length > 0 ?
+          `${match[1]} (${asset})` : asset;
 
-      return {
-        name: asset,
-        title: title,
+        return {
+          name: asset,
+          title: title,
+        };
+      }).map((asset) => {
+        return `<li><a href="${asset['name']}">${asset['title']}</a></li>`;
+      }).join('');
+
+      const document = template
+        .replace('#TITLE#', title)
+        .replace('#BODY#', `<ul>${body}</ul>`);
+
+      compilation.assets['index.html'] = {
+        source: function() {
+          return document;
+        },
+        size: function() {
+          return document.length;
+        },
       };
-    }).map((asset) => {
-      return `<li><a href="${asset['name']}">${asset['title']}</a></li>`;
-    }).join('');
 
-    const document = template
-      .replace('#TITLE#', title)
-      .replace('#BODY#', `<ul>${body}</ul>`);
-
-    compilation.assets['index.html'] = {
-      source: function() {
-        return document;
-      },
-      size: function() {
-        return document.length;
-      },
-    };
-
-    callback();
-  });
+      callback();
+    });
 };
 
 module.exports = HtmlIndexPlugin;
